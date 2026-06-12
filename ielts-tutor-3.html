@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IELTS 7.5 — AI Tutor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+  :root {
+    --bg: #0D0F14;
+    --surface: #161920;
+    --surface2: #1E2230;
+    --border: #2A2F40;
+    --accent: #4F8EF7;
+    --accent2: #7C5CFC;
+    --gold: #F0B429;
+    --green: #34D399;
+    --red: #F87171;
+    --text: #E8EAF0;
+    --muted: #6B7280;
+    --muted2: #9CA3AF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(240,180,41,0.12);
+    border: 1px solid rgba(240,180,41,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 12px 24px 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 8px 18px;
+    border-radius: 8px 8px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    border: none;
+    background: transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: var(--bg);
+    color: var(--accent);
+    border-top: 2px solid var(--accent);
+  }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* MAIN */
+  main {
+    flex: 1;
+    padding: 24px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* SECTION */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* TODAY PLAN */
+  .day-header {
+    margin-bottom: 24px;
+  }
+  .day-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .day-sub { color: var(--muted2); font-size: 14px; }
+  
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted2);
+    margin-bottom: 8px;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.5s ease;
+  }
+
+  /* TASKS */
+  .tasks { display: flex; flex-direction: column; gap: 12px; }
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .task-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .task-card.done { opacity: 0.5; }
+  .task-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .icon-listen { background: rgba(79,142,247,0.15); }
+  .icon-read   { background: rgba(52,211,153,0.15); }
+  .icon-write  { background: rgba(124,92,252,0.15); }
+  .icon-speak  { background: rgba(240,180,41,0.15); }
+  .icon-vocab  { background: rgba(248,113,113,0.15); }
+
+  .task-info { flex: 1; }
+  .task-name { font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+  .task-desc { font-size: 13px; color: var(--muted2); margin-bottom: 6px; }
+  .task-meta { display: flex; gap: 10px; }
+  .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .tag-time { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .tag-skill { background: rgba(52,211,153,0.15); color: var(--green); }
+  .task-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s;
+    margin-top: 2px;
+  }
+  .task-check.checked { background: var(--green); border-color: var(--green); }
+
+  /* LESSON VIEW */
+  .lesson-view { display: none; }
+  .lesson-view.active { display: block; }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  
+  .lesson-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .lesson-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .lesson-content { color: var(--muted2); font-size: 14px; line-height: 1.7; }
+  .lesson-content b { color: var(--text); }
+  .lesson-content .highlight {
+    background: rgba(79,142,247,0.1);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    color: var(--text);
+  }
+
+  /* CHAT */
+  .chat-wrap {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .chat-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ai-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .chat-messages {
+    height: 320px;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg { max-width: 80%; }
+  .msg.ai { align-self: flex-start; }
+  .msg.user { align-self: flex-end; }
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .msg.ai .msg-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px 12px 12px 12px;
+  }
+  .msg.user .msg-bubble {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border-radius: 12px 4px 12px 12px;
+  }
+  .msg-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; padding: 0 4px; }
+  .msg.user .msg-label { text-align: right; }
+
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .score-good { background: rgba(52,211,153,0.15); color: var(--green); }
+  .score-avg  { background: rgba(240,180,41,0.15); color: var(--gold); }
+
+  .chat-input-row {
+    display: flex;
+    gap: 10px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--muted); }
+  .send-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .send-btn:hover:not(:disabled) { opacity: 0.9; }
+
+  /* ROADMAP */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media(max-width:600px){ .roadmap-grid{ grid-template-columns:1fr; } }
+
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .phase-card.current { border-color: var(--accent); }
+  .phase-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .phase-card.current .phase-tag { color: var(--accent); }
+  .phase-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .phase-period { font-size: 12px; color: var(--muted2); margin-bottom: 12px; }
+  .phase-goals { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .phase-goals li {
+    font-size: 13px;
+    color: var(--muted2);
+    padding-left: 16px;
+    position: relative;
+  }
+  .phase-goals li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+  .phase-card.current .phase-goals li::before { color: var(--accent); }
+
+  .target-scores {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media(max-width:500px){ .target-scores{ grid-template-columns:repeat(2,1fr); } }
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .score-skill { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .score-val { font-size: 28px; font-weight: 700; font-family: 'Playfair Display', serif; }
+  .score-val.hard { color: var(--red); }
+  .score-val.med  { color: var(--gold); }
+  .score-val.easy { color: var(--green); }
+
+  /* VOCAB */
+  .vocab-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media(max-width:500px){ .vocab-grid{ grid-template-columns:1fr; } }
+  .vocab-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .vocab-card:hover { border-color: var(--accent2); }
+  .vocab-word { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .vocab-type { font-size: 11px; color: var(--accent); font-style: italic; margin-bottom: 8px; }
+  .vocab-meaning { font-size: 13px; color: var(--muted2); }
+  .vocab-example { font-size: 12px; color: var(--muted); margin-top: 8px; font-style: italic; border-top: 1px solid var(--border); padding-top: 8px; }
+  .vocab-flip {
+    position: absolute; inset: 0;
+    background: var(--surface2);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    text-align: center;
+  }
+  .vocab-card:hover .vocab-flip { opacity: 1; }
+  .vocab-flip-word { font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+  .vocab-flip-en { font-size: 13px; color: var(--muted2); }
+
+  /* LOADING */
+  .loading { display: flex; gap: 4px; padding: 4px 0; }
+  .loading span {
+    width: 6px; height: 6px;
+    background: var(--muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .loading span:nth-child(2) { animation-delay: 0.2s; }
+  .loading span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .section-sub { font-size: 13px; color: var(--muted2); margin-bottom: 20px; }
+  
+  /* TIPS */
+  .tip-box {
+    background: rgba(79,142,247,0.08);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--muted2);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .tip-box b { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">IELTS 7.5 ✦</div>
+  <div class="streak-badge">🔥 <span id="streakCount">1</span> ngày liên tiếp</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('today')">📅 Hôm nay</button>
+  <button class="tab" onclick="switchTab('roadmap')">🗺️ Lộ trình</button>
+  <button class="tab" onclick="switchTab('vocab')">📚 Vocabulary</button>
+</div>
+
+<main>
+
+<!-- TODAY TAB -->
+<div class="section active" id="tab-today">
+  <div id="task-list-view">
+    <div class="day-header">
+      <div class="day-title">Ngày 1 — Nền tảng</div>
+      <div class="day-sub">Giai đoạn 1: Xây nền • IELTS ~4.5 → 5.5 mục tiêu</div>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>Tiến độ hôm nay</span>
+        <span id="progressText">0 / 45 phút</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      💡 <b>Tip của giáo viên:</b> Với TOEIC 400, bạn đã có vốn từ cơ bản. Ưu tiên <b>Listening</b> là đúng — đây là kỹ năng giúp bạn tăng điểm nhanh nhất trong giai đoạn đầu.
+    </div>
+
+    <div class="tasks" id="taskList">
+      <div class="task-card" onclick="openLesson('listen')" id="task-listen">
+        <div class="task-icon icon-listen">🎧</div>
+        <div class="task-info">
+          <div class="task-name">Listening — Section 1 Drill</div>
+          <div class="task-desc">Nghe form-filling: điền thông tin (tên, số, địa chỉ). Đây là dạng dễ nhất — phải đạt 100%.</div>
+          <div class="task-meta">
+            <span class="tag tag-time">⏱ 15 phút</span>
+            <span class="tag tag-skill">Listening</span>
+          </div>
+        </div>
+        <div class="task-check" id="check-listen">✓</div>
+      </div>
+
+      <div class="task-card" onclick="openLesson('vocab')" id="task-vocab">
+        <div class="task-icon icon-vocab">🔤</div>
+        <div class="task-info">
+          <div class="task-name">Vocabulary — Academic Word List</div>
+          <div class="task-desc">Học 10 từ AWL hôm nay: analyse, approach, area, assessment, assume... (+ luyện với AI)</div>
+          <div class="task-meta">
+            <span class="tag tag-time">⏱ 10 phút</span>
+            <span class="tag tag-skill">All skills</span>
+          </div>
+        </div>
+        <div class="task-check" id="check-vocab">✓</div>
+      </div>
+
+      <div class="task-card" onclick="openLesson('write')" id="task-write">
+        <div class="task-icon icon-write">✍️</div>
+        <div class="task-info">
+          <div class="task-name">Writing Task 1 — Cấu trúc cơ bản</div>
+          <div class="task-desc">Học cách viết Introduction cho bar chart. Viết 1 đoạn intro — AI sẽ chấm ngay.</div>
+          <div class="task-meta">
+            <span class="tag tag-time">⏱ 15 phút</span>
+            <span class="tag tag-skill">Writing</span>
+          </div>
+        </div>
+        <div class="task-check" id="check-write">✓</div>
+      </div>
+
+      <div class="task-card" onclick="openLesson('speak')" id="task-speak">
+        <div class="task-icon icon-speak">🗣️</div>
+        <div class="task-info">
+          <div class="task-name">Speaking Part 1 — Self Introduction</div>
+          <div class="task-desc">Trả lời 3 câu hỏi cơ bản về bản thân. AI sẽ chấm fluency và vocabulary.</div>
+          <div class="task-meta">
+            <span class="tag tag-time">⏱ 5 phút</span>
+            <span class="tag tag-skill">Speaking</span>
+          </div>
+        </div>
+        <div class="task-check" id="check-speak">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LESSON VIEWS -->
+  <div class="lesson-view" id="lesson-listen">
+    <button class="back-btn" onclick="closeLesson('listen')">← Quay lại</button>
+    <div class="lesson-box">
+      <div class="lesson-title">🎧 Listening Section 1 — Form Filling</div>
+      <div class="lesson-content">
+        <div class="highlight">📌 <b>Chiến lược:</b> Đọc câu hỏi TRƯỚC khi nghe. Gạch chân từ khóa. Đoán kiểu thông tin cần điền.</div>
+        <b>Lỗi phổ biến:</b> Không nghe kịp số điện thoại • Bỏ lỡ câu tiếp theo khi đang viết • Quên viết hoa tên riêng
+      </div>
+    </div>
+
+    <!-- AUDIO PLAYER -->
+    <div class="lesson-box" id="audio-section">
+      <div class="lesson-title" style="margin-bottom:12px">🔊 Audio — Đọc câu hỏi trước, rồi bấm Play</div>
+
+      <!-- Question form to read before listening -->
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">📋 Đề bài — Đọc trước khi nghe</div>
+        <div style="font-size:13px;color:var(--muted2);line-height:2">
+          <b style="color:var(--text)">LIBRARY MEMBERSHIP FORM</b><br>
+          Q1. First name: ___________<br>
+          Q2. Last name: ___________<br>
+          Q3. Phone number: ___________<br>
+          Q4. Street address: ___________<br>
+          Q5. Membership type: ___________
+        </div>
+      </div>
+
+      <!-- TTS Controls -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="send-btn" id="playBtn" onclick="playAudio()" style="flex:1;min-width:120px">▶ Play Audio</button>
+          <button class="send-btn" onclick="replayAudio()" style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);color:var(--text)">🔁 Nghe lại</button>
+          <button class="send-btn" onclick="playSlowAudio()" style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);color:var(--gold)">🐢 Chậm hơn</button>
+        </div>
+        <div id="audio-status" style="font-size:12px;color:var(--muted);text-align:center;height:16px"></div>
+
+        <!-- Transcript toggle -->
+        <button onclick="toggleTranscript()" style="background:none;border:1px dashed var(--border);border-radius:8px;padding:8px 14px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit">
+          👁 Xem transcript (chỉ sau khi nghe xong!)
+        </button>
+        <div id="transcript-box" style="display:none;background:var(--surface2);border-radius:10px;padding:14px;font-size:13px;color:var(--muted2);line-height:1.8;border:1px solid var(--border)">
+          <b style="color:var(--green)">📜 Transcript:</b><br><br>
+          "Good morning, I'd like to register for a library membership please."<br>
+          "Of course! Can I take your first name?"<br>
+          "It's <b style="color:var(--accent)">Sarah</b>."<br>
+          "And your last name?"<br>
+          "<b style="color:var(--accent)">Mitchell</b>. M-I-T-C-H-E-L-L."<br>
+          "Phone number?"<br>
+          "Oh, it's <b style="color:var(--accent)">07 double 8, 3 4 5, 9 1 2</b>."<br>
+          "Street address?"<br>
+          "<b style="color:var(--accent)">27 Oak Avenue</b>."<br>
+          "And what type of membership would you like — standard or premium?"<br>
+          "<b style="color:var(--accent)">Standard</b>, please."
+        </div>
+      </div>
+    </div>
+
+    <!-- Answer + Chat -->
+    <div class="chat-wrap">
+      <div class="chat-header"><div class="ai-dot"></div> Giáo viên AI — Chấm bài Listening</div>
+      <div class="chat-messages" id="msgs-listen">
+        <div class="msg ai"><div class="msg-label">Giáo viên</div>
+          <div class="msg-bubble">🎧 Nghe xong rồi điền đáp án nhé!<br><br>Gõ theo format:<br><b>Q1: [câu trả lời]<br>Q2: ...<br>Q3: ...<br>Q4: ...<br>Q5: ...</b><br><br>Mình sẽ chấm và giải thích từng câu! 📝</div></div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="input-listen" placeholder="Q1: Sarah&#10;Q2: ..." rows="5"></textarea>
+        <button class="send-btn" onclick="sendMessage('listen')">Chấm ✈</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson-view" id="lesson-vocab">
+    <button class="back-btn" onclick="closeLesson('vocab')">← Quay lại</button>
+    <div class="lesson-box">
+      <div class="lesson-title">🔤 Academic Word List — Top Words</div>
+      <div class="lesson-content">
+        <b>Tại sao cần AWL?</b> IELTS Reading và Writing dùng rất nhiều từ học thuật. Học thuộc AWL giúp bạn tăng điểm cả 4 kỹ năng.<br><br>
+        <div class="highlight">🎯 Mục tiêu: Học 10 từ/ngày × 365 ngày = 3,650 từ = đủ cho band 7.5+</div>
+        Hôm nay học <b>5 từ AWL đầu tiên</b>. Hỏi AI để luyện dùng trong câu nhé!
+      </div>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-header"><div class="ai-dot"></div> Giáo viên AI — Vocabulary Coach</div>
+      <div class="chat-messages" id="msgs-vocab">
+        <div class="msg ai"><div class="msg-label">Giáo viên</div>
+          <div class="msg-bubble">📚 Hôm nay mình dạy bạn 5 từ AWL cực quan trọng:<br><br>1. <b>analyse</b> (v) — phân tích<br>2. <b>significant</b> (adj) — đáng kể, quan trọng<br>3. <b>indicate</b> (v) — chỉ ra, cho thấy<br>4. <b>contrast</b> (v/n) — tương phản<br>5. <b>demonstrate</b> (v) — chứng minh, cho thấy<br><br>Hãy đặt 1 câu với từ <b>"significant"</b> để mình chấm nhé! 💪</div></div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="input-vocab" placeholder="Đặt câu với 'significant'..." rows="2"></textarea>
+        <button class="send-btn" onclick="sendMessage('vocab')">Gửi ✈</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson-view" id="lesson-write">
+    <button class="back-btn" onclick="closeLesson('write')">← Quay lại</button>
+    <div class="lesson-box">
+      <div class="lesson-title">✍️ Writing Task 1 — Cách viết Introduction</div>
+      <div class="lesson-content">
+        <b>Công thức Introduction Task 1:</b><br><br>
+        <div class="highlight">The [chart/graph/table/diagram] [shows/illustrates/presents] [thông tin gì] [ở đâu/khi nào].</div>
+        <b>Ví dụ đề bài:</b> "The bar chart shows the percentage of students using different transport to school in 2020."<br><br>
+        <b>Cách paraphrase (KHÔNG copy y chang đề):</b><br>
+        → "The given bar chart illustrates the proportion of pupils who commuted to school via various means of transport in 2020."<br><br>
+        <div class="highlight">❌ Sai: "The bar chart shows the percentage of students..."<br>✅ Đúng: Paraphrase ít nhất 3-4 từ khác nhau</div>
+      </div>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-header"><div class="ai-dot"></div> Giáo viên AI — Writing Coach</div>
+      <div class="chat-messages" id="msgs-write">
+        <div class="msg ai"><div class="msg-label">Giáo viên</div>
+          <div class="msg-bubble">✍️ Thực hành Writing Task 1!<br><br><b>Đề bài:</b> "The pie chart shows the main reasons why people in the UK visited the library in 2019."<br><br>Hãy viết <b>1 câu Introduction</b> theo công thức đã học (nhớ paraphrase nhé!). Mình sẽ chấm và chỉ lỗi cụ thể. 📝</div></div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="input-write" placeholder="The pie chart... (viết câu intro của bạn)" rows="3"></textarea>
+        <button class="send-btn" onclick="sendMessage('write')">Gửi ✈</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson-view" id="lesson-speak">
+    <button class="back-btn" onclick="closeLesson('speak')">← Quay lại</button>
+    <div class="lesson-box">
+      <div class="lesson-title">🗣️ Speaking Part 1 — Personal Questions</div>
+      <div class="lesson-content">
+        <b>Cấu trúc câu trả lời Part 1 (PEEL):</b><br><br>
+        <div class="highlight">
+          <b>P</b>oint — Trả lời thẳng câu hỏi<br>
+          <b>E</b>xplanation — Giải thích tại sao<br>
+          <b>E</b>xample — Ví dụ cụ thể<br>
+          <b>L</b>ink — Kết thúc tự nhiên
+        </div>
+        <b>❌ Tránh:</b> Trả lời 1-2 từ ("Yes." / "I like it.")<br>
+        <b>✅ Target:</b> 3-4 câu, 20-30 giây mỗi câu hỏi<br><br>
+        <b>Hôm nay luyện:</b> Gõ câu trả lời bằng tiếng Anh — AI chấm vocabulary và grammar!
+      </div>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-header"><div class="ai-dot"></div> Giáo viên AI — Speaking Coach</div>
+      <div class="chat-messages" id="msgs-speak">
+        <div class="msg ai"><div class="msg-label">Giáo viên</div>
+          <div class="msg-bubble">🗣️ Speaking Part 1 — Let's go!<br><br>Câu hỏi: <b>"Do you prefer to study in the morning or evening? Why?"</b><br><br>Hãy trả lời bằng tiếng Anh theo cấu trúc PEEL (3-4 câu). Mình sẽ chấm band score và gợi ý cải thiện! 💬</div></div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="input-speak" placeholder="I prefer to study in the... because..." rows="3"></textarea>
+        <button class="send-btn" onclick="sendMessage('speak')">Gửi ✈</button>
+      </div>
+    </div>
+  </div>
+</div><!-- end today -->
+
+<!-- ROADMAP TAB -->
+<div class="section" id="tab-roadmap">
+  <div class="section-title">🗺️ Lộ trình 12 tháng</div>
+  <div class="section-sub">Từ TOEIC 400 (~IELTS 4.5) → IELTS 7.5</div>
+
+  <div class="target-scores">
+    <div class="score-card"><div class="score-skill">Listening</div><div class="score-val hard">8.0</div></div>
+    <div class="score-card"><div class="score-skill">Reading</div><div class="score-val med">7.5</div></div>
+    <div class="score-card"><div class="score-skill">Writing</div><div class="score-val med">7.0</div></div>
+    <div class="score-card"><div class="score-skill">Speaking</div><div class="score-val easy">7.0</div></div>
+  </div>
+
+  <div class="tip-box">
+    💡 Để đạt overall 7.5, bạn cần Listening cao nhất (8.0) vì đây là kỹ năng tăng nhanh nhất. Writing thường khó nhất nên chỉ cần 7.0.
+  </div>
+
+  <div class="roadmap-grid">
+    <div class="phase-card current">
+      <div class="phase-tag">⚡ Hiện tại</div>
+      <div class="phase-title">Giai đoạn 1: Nền tảng</div>
+      <div class="phase-period">Tháng 1–3</div>
+      <ul class="phase-goals">
+        <li>Ngữ pháp cơ bản (tenses, articles)</li>
+        <li>AWL 1000 từ đầu tiên</li>
+        <li>Listening Section 1–2</li>
+        <li>Writing Task 1 cơ bản</li>
+        <li>Mục tiêu: IELTS 5.5</li>
+      </ul>
+    </div>
+    <div class="phase-card">
+      <div class="phase-tag">📈 Tháng 4–6</div>
+      <div class="phase-title">Giai đoạn 2: Phát triển</div>
+      <div class="phase-period">Tháng 4–6</div>
+      <ul class="phase-goals">
+        <li>Listening Section 3–4</li>
+        <li>Reading skimming/scanning</li>
+        <li>Writing Task 2 (opinion essay)</li>
+        <li>Speaking Part 2 (cue card)</li>
+        <li>Mục tiêu: IELTS 6.5</li>
+      </ul>
+    </div>
+    <div class="phase-card">
+      <div class="phase-tag">🚀 Tháng 7–9</div>
+      <div class="phase-title">Giai đoạn 3: Nâng cao</div>
+      <div class="phase-period">Tháng 7–9</div>
+      <ul class="phase-goals">
+        <li>Full mock tests hàng tuần</li>
+        <li>Collocation & paraphrasing</li>
+        <li>Complex sentences writing</li>
+        <li>Speaking Part 3 (discussion)</li>
+        <li>Mục tiêu: IELTS 7.0</li>
+      </ul>
+    </div>
+    <div class="phase-card">
+      <div class="phase-tag">🎯 Tháng 10–12</div>
+      <div class="phase-title">Giai đoạn 4: Thi thật</div>
+      <div class="phase-period">Tháng 10–12</div>
+      <ul class="phase-goals">
+        <li>Thi thử Cambridge materials</li>
+        <li>Sửa lỗi cụ thể từng kỹ năng</li>
+        <li>Time management tactics</li>
+        <li>Thi thật lần 1 (tháng 10)</li>
+        <li>Mục tiêu: IELTS 7.5 ✓</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="lesson-box">
+    <div class="lesson-title">📅 Lịch 45 phút mỗi ngày</div>
+    <div class="lesson-content">
+      <b>Thứ 2–4–6 (Listening focus):</b><br>
+      → 15p Listening drill + 10p Vocab + 10p Writing + 10p Speaking<br><br>
+      <b>Thứ 3–5 (Writing focus):</b><br>
+      → 20p Writing practice + 15p Reading + 10p Vocab<br><br>
+      <b>Thứ 7 (Mock test):</b><br>
+      → 45p giải 1 phần đề thi thật (Cambridge IELTS 1–19)<br><br>
+      <b>Chủ nhật (Review):</b><br>
+      → 20p ôn lại vocab tuần + 25p sửa lỗi từ mock test
+    </div>
+  </div>
+</div>
+
+<!-- VOCAB TAB -->
+<div class="section" id="tab-vocab">
+  <div class="section-title">📚 Vocabulary Flash Cards</div>
+  <div class="section-sub">Academic Word List — Hover để xem nghĩa</div>
+
+  <div class="vocab-grid">
+    <div class="vocab-card">
+      <div class="vocab-word">analyse</div>
+      <div class="vocab-type">verb</div>
+      <div class="vocab-meaning">phân tích</div>
+      <div class="vocab-example">"The study analyses the impact of social media on teenagers."</div>
+      <div class="vocab-flip">
+        <div class="vocab-flip-word">analyse</div>
+        <div class="vocab-flip-en">to examine in detail → <b>examine, investigate, study</b></div>
+      </div>
+    </div>
+    <div class="vocab-card">
+      <div class="vocab-word">significant</div>
+      <div class="vocab-type">adjective</div>
+      <div class="vocab-meaning">đáng kể, quan trọng</div>
+      <div class="vocab-example">"There has been a significant increase in online shopping."</div>
+      <div class="vocab-flip">
+        <div class="vocab-flip-word">significant</div>
+        <div class="vocab-flip-en">large/important enough to notice → <b>notable, considerable, substantial</b></div>
+      </div>
+    </div>
+    <div class="vocab-card">
+      <div class="vocab-word">indicate</div>
+      <div class="vocab-type">verb</div>
+      <div class="vocab-meaning">chỉ ra, cho thấy</div>
+      <div class="vocab-example">"The graph indicates a sharp rise in temperatures."</div>
+      <div class="vocab-flip">
+        <div class="vocab-flip-word">indicate</div>
+        <div class="vocab-flip-en">to show or suggest → <b>suggest, demonstrate, reveal</b></div>
+      </div>
+    </div>
+    <div class="vocab-card">
+      <div class="vocab-word">contrast</div>
+      <div class="vocab-type">verb / noun</div>
+      <div class="vocab-meaning">tương phản, so sánh khác biệt</div>
+      <div class="vocab-example">"In contrast, urban areas experienced rapid growth."</div>
+      <div class="vocab-flip">
+        <div class="vocab-flip-word">contrast</div>
+        <div class="vocab-flip-en">to compare differences → <b>by contrast, on the contrary</b></div>
+      </div>
+    </div>
+    <div class="vocab-card">
+      <div class="vocab-word">demonstrate</div>
+      <div class="vocab-type">verb</div>
+      <div class="vocab-meaning">chứng minh, thể hiện</div>
+      <div class="vocab-example">"The data demonstrates a clear trend towards remote work."</div>
+      <div class="vocab-flip">
+        <div class="vocab-flip-word">demonstrate</div>
+        <div class="vocab-flip-en">to clearly show → <b>show, prove, illustrate</b></div>
+      </div>
+    </div>
+    <div class="vocab-card">
+      <div class="vocab-word">proportion</div>
+      <div class="vocab-type">noun</div>
+      <div class="vocab-meaning">tỷ lệ, phần</div>
+      <div class="vocab-example">"A large proportion of students prefer online learning."</div>
+      <div class="vocab-flip">
+        <div class="vocab-flip-word">proportion</div>
+        <div class="vocab-flip-en">a part in relation to whole → <b>percentage, fraction, share</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px">
+    <div class="chat-wrap">
+      <div class="chat-header"><div class="ai-dot"></div> Luyện từ vựng với AI</div>
+      <div class="chat-messages" id="msgs-vocabchat">
+        <div class="msg ai"><div class="msg-label">Giáo viên</div>
+          <div class="msg-bubble">🔤 Hãy hỏi mình bất cứ điều gì về từ vựng IELTS!<br><br>Ví dụ:<br>• "Cho mình 5 từ về chủ đề environment"<br>• "Collocations của từ 'increase'"<br>• "Kiểm tra câu này đúng không: ..."</div></div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="input-vocabchat" placeholder="Hỏi về từ vựng IELTS..." rows="2"></textarea>
+        <button class="send-btn" onclick="sendMessage('vocabchat')">Gửi ✈</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── LOCALSTORAGE PERSISTENCE ─────────────────────────────────────
+const STORAGE_KEY = 'ielts_progress';
+const taskMinutes = { listen: 15, vocab: 10, write: 15, speak: 5 };
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10); // "2026-06-12"
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getOrCreateToday(state) {
+  const today = todayStr();
+  if (!state[today]) state[today] = { completed: {}, minutes: 0 };
+  return state[today];
+}
+
+// Compute streak
+function computeStreak(state) {
+  let streak = 0;
+  let d = new Date();
+  while (true) {
+    const key = d.toISOString().slice(0, 10);
+    const dayData = state[key];
+    const done = dayData && Object.keys(dayData.completed || {}).length > 0;
+    if (!done) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+// Init state
+let appState = loadState();
+let todayData = getOrCreateToday(appState);
+
+function initUI() {
+  // Restore today's tasks
+  Object.keys(todayData.completed).forEach(type => {
+    const check = document.getElementById('check-' + type);
+    if (check) { check.classList.add('checked'); check.textContent = '✓'; }
+    const card = document.getElementById('task-' + type);
+    if (card) card.classList.add('done');
+  });
+  updateProgress();
+
+  // Streak
+  const streak = computeStreak(appState);
+  document.getElementById('streakCount').textContent = streak || 1;
+
+  // Total days studied
+  const totalDays = Object.keys(appState).filter(k => Object.keys(appState[k].completed || {}).length > 0).length;
+  const dayEl = document.querySelector('.day-title');
+  if (dayEl) dayEl.textContent = `Ngày ${totalDays || 1} — Luyện tập`;
+}
+
+// TABS
+function switchTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.tab')[['today','roadmap','vocab'].indexOf(tab)].classList.add('active');
+}
+
+// LESSONS
+function openLesson(type) {
+  document.getElementById('task-list-view').style.display = 'none';
+  document.querySelectorAll('.lesson-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('lesson-' + type).classList.add('active');
+}
+
+function closeLesson(type) {
+  document.getElementById('lesson-' + type).classList.remove('active');
+  document.getElementById('task-list-view').style.display = 'block';
+  if (!todayData.completed[type]) {
+    todayData.completed[type] = true;
+    todayData.minutes += taskMinutes[type] || 10;
+    appState[todayStr()] = todayData;
+    saveState(appState);
+
+    const check = document.getElementById('check-' + type);
+    if (check) { check.classList.add('checked'); check.textContent = '✓'; }
+    document.getElementById('task-' + type).classList.add('done');
+    updateProgress();
+
+    // Update streak display
+    document.getElementById('streakCount').textContent = computeStreak(appState);
+
+    // Celebrate if all done
+    const allDone = ['listen','vocab','write','speak'].every(t => todayData.completed[t]);
+    if (allDone) {
+      setTimeout(() => showCelebration(), 300);
+    }
+  }
+}
+
+function updateProgress() {
+  const mins = todayData.minutes || 0;
+  const pct = Math.min(100, (mins / 45) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = mins + ' / 45 phút';
+}
+
+function showCelebration() {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:linear-gradient(135deg,#4F8EF7,#7C5CFC);color:white;padding:28px 36px;
+    border-radius:20px;text-align:center;z-index:9999;font-family:Inter,sans-serif;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5)`;
+  el.innerHTML = `<div style="font-size:40px;margin-bottom:8px">🎉</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px">Hoàn thành ngày hôm nay!</div>
+    <div style="font-size:13px;opacity:0.85">45 phút ✓ • Streak: ${computeStreak(appState)} ngày 🔥</div>
+    <button onclick="this.parentElement.remove()" style="margin-top:16px;background:rgba(255,255,255,0.2);
+      border:none;color:white;padding:8px 20px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px">
+      Đóng
+    </button>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+// Run on load
+window.addEventListener('DOMContentLoaded', initUI);
+
+// SYSTEM PROMPTS per lesson type
+const systemPrompts = {
+  listen: `Bạn là giáo viên IELTS chuyên về Listening. Học sinh vừa nghe đoạn audio Section 1 (library membership) và điền form. Đáp án đúng là: Q1: Sarah, Q2: Mitchell, Q3: 07 883 459 12 (hoặc 07 double 8 3 4 5 9 1 2), Q4: 27 Oak Avenue, Q5: Standard. Khi học sinh gửi đáp án, hãy: 1) Chấm từng câu đúng/sai (dùng ✅ ❌) 2) Cho biết tổng điểm (VD: 4/5) 3) Giải thích lỗi sai cụ thể — đặc biệt nếu nghe sai số điện thoại hãy giải thích cách đọc số tiếng Anh 4) Cho tip ngắn. Trả lời bằng tiếng Việt, ngắn gọn, khuyến khích.`,
+  vocab: `Bạn là giáo viên IELTS dạy Vocabulary. Học sinh đang luyện Academic Word List để đạt band 7.5. Khi học sinh đặt câu, hãy: 1) Chấm câu đúng/sai về ngữ pháp 2) Đánh giá cách dùng từ có phù hợp ngữ cảnh học thuật không 3) Gợi ý cách diễn đạt tốt hơn nếu cần 4) Cho điểm band score cho câu đó (5.0-7.0). Vui vẻ, khuyến khích. Mix tiếng Việt và Anh.`,
+  write: `Bạn là giáo viên IELTS chấm Writing. Học sinh đang tập viết Task 1 introduction. Khi nhận câu intro của học sinh, hãy: 1) Chỉ ra điểm tốt 2) Chỉ ra lỗi cụ thể (nếu copy y chang đề, thiếu paraphrase, sai ngữ pháp) 3) Gợi ý sửa lại 4) Cho band score ước tính cho câu đó (4.0-7.0) 5) Cho 1 câu tip writing. Trả lời ngắn gọn, cụ thể. Mix tiếng Việt và Anh.`,
+  speak: `Bạn là giáo viên IELTS chấm Speaking. Học sinh đang luyện Part 1. Khi nhận câu trả lời, hãy: 1) Nhận xét về độ dài (đủ 3-4 câu chưa?) 2) Chỉ lỗi ngữ pháp cụ thể 3) Góp ý về từ vựng (có thể dùng từ hay hơn không?) 4) Cho band score Speaking ước tính 5) Viết lại phiên bản cải thiện ngắn gọn. Mix tiếng Việt và Anh, thân thiện.`,
+  vocabchat: `Bạn là giáo viên IELTS dạy Vocabulary cho học sinh Việt Nam đang học để đạt 7.5. Hãy: - Giải thích từ vựng học thuật (AWL) rõ ràng - Cho collocation, synonym, example sentences - Giải thích sự khác biệt giữa các từ gần nghĩa - Kiểm tra câu học sinh viết - Gợi ý từ theo chủ đề IELTS. Trả lời cụ thể, ngắn gọn, mix tiếng Việt và Anh.`
+};
+
+// SEND MESSAGE
+async function sendMessage(chatId) {
+  const inputId = 'input-' + chatId;
+  const msgsId = 'msgs-' + chatId;
+  const input = document.getElementById(inputId);
+  const msgs = document.getElementById(msgsId);
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Add user message
+  msgs.innerHTML += `<div class="msg user"><div class="msg-label">Bạn</div><div class="msg-bubble">${escHtml(text)}</div></div>`;
+  input.value = '';
+
+  // Loading indicator
+  const loadId = 'load-' + Date.now();
+  msgs.innerHTML += `<div class="msg ai" id="${loadId}"><div class="msg-label">Giáo viên</div><div class="msg-bubble"><div class="loading"><span></span><span></span><span></span></div></div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const btn = document.querySelector(`#lesson-${chatId === 'vocabchat' ? 'vocab' : chatId} .send-btn`) 
+    || document.querySelector('.send-btn');
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompts[chatId] || systemPrompts.vocabchat,
+        messages: [{ role: "user", content: text }]
+      })
+    });
+    const data = await response.json();
+    const reply = data.content?.map(c => c.text || '').join('\n') || "Xin lỗi, có lỗi xảy ra. Thử lại nhé!";
+    
+    document.getElementById(loadId).querySelector('.msg-bubble').innerHTML = formatReply(reply);
+  } catch (e) {
+    document.getElementById(loadId).querySelector('.msg-bubble').textContent = "Lỗi kết nối. Thử lại nhé!";
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function formatReply(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>');
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── TEXT-TO-SPEECH ──────────────────────────────────────────────
+const AUDIO_SCRIPT = `Good morning, I'd like to register for a library membership please.
+Of course! Can I take your first name?
+It's Sarah.
+And your last name?
+Mitchell. M I T C H E L L.
+Phone number?
+Oh, it's 0 7, double 8, 3 4 5, 9 1 2.
+Street address?
+27 Oak Avenue.
+And what type of membership would you like — standard or premium?
+Standard, please.`;
+
+let currentUtterance = null;
+let audioRate = 0.85;
+
+function speakScript(rate) {
+  if (!window.speechSynthesis) {
+    document.getElementById('audio-status').textContent = '⚠️ Trình duyệt không hỗ trợ TTS. Thử Chrome/Edge nhé!';
+    return;
+  }
+  if (currentUtterance) { window.speechSynthesis.cancel(); }
+
+  const utter = new SpeechSynthesisUtterance(AUDIO_SCRIPT);
+  utter.lang = 'en-GB';
+  utter.rate = rate;
+  utter.pitch = 1;
+
+  // Try to find British English voice
+  const voices = window.speechSynthesis.getVoices();
+  const britishVoice = voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en'));
+  if (britishVoice) utter.voice = britishVoice;
+
+  const btn = document.getElementById('playBtn');
+  const status = document.getElementById('audio-status');
+
+  utter.onstart = () => {
+    btn.textContent = '⏸ Đang phát...';
+    btn.disabled = true;
+    status.textContent = '🔊 Đang phát — chú ý lắng nghe!';
+  };
+  utter.onend = () => {
+    btn.textContent = '▶ Play Audio';
+    btn.disabled = false;
+    status.textContent = '✅ Xong! Điền đáp án bên dưới nhé.';
+  };
+  utter.onerror = () => {
+    btn.textContent = '▶ Play Audio';
+    btn.disabled = false;
+    status.textContent = '⚠️ Lỗi. Thử lại hoặc dùng Chrome/Edge.';
+  };
+
+  currentUtterance = utter;
+  window.speechSynthesis.speak(utter);
+}
+
+function playAudio() { audioRate = 0.85; speakScript(audioRate); }
+function replayAudio() { speakScript(audioRate); }
+function playSlowAudio() { audioRate = 0.6; speakScript(0.6); }
+
+function toggleTranscript() {
+  const box = document.getElementById('transcript-box');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+// Preload voices on page load
+window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+// ────────────────────────────────────────────────────────────────
+
+// Enter to send
+['listen','vocab','write','speak','vocabchat'].forEach(id => {
+  const el = document.getElementById('input-' + id);
+  if (el) el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(id); }
+  });
+});
+</script>
+</body>
+</html>
